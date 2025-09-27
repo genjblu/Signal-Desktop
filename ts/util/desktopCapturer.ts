@@ -194,7 +194,7 @@ export class DesktopCapturer {
       const videoTrack = stream.getVideoTracks()[0];
       strictAssert(videoTrack, 'videoTrack does not exist');
 
-      // Apply constraints and ensure that there is at least 1 frame per second.
+      // Apply constraints and ensure that there is at least 24 frames per second.
       await videoTrack.applyConstraints({
         width: {
           max: REQUESTED_SCREEN_SHARE_WIDTH,
@@ -205,7 +205,7 @@ export class DesktopCapturer {
           ideal: REQUESTED_SCREEN_SHARE_HEIGHT,
         },
         frameRate: {
-          min: 1,
+          min: 24,
           max: REQUESTED_SCREEN_SHARE_FRAMERATE,
           ideal: REQUESTED_SCREEN_SHARE_FRAMERATE,
         },
