@@ -1,27 +1,20 @@
 import React, { useState } from 'react';
-// Import your PIN modal/dialog if needed
 // import PinPromptModal from '../../components/PinPromptModal';
 
 const Privacy: React.FC = () => {
-  // State for managing PIN lock status
   const [pinLockEnabled, setPinLockEnabled] = useState(false);
   const [showSetPinModal, setShowSetPinModal] = useState(false);
-
-  // Optionally fetch this state from Redux/store
-  // const pinLockEnabled = useSelector(...);
 
   const handleEnablePinLock = () => {
     setShowSetPinModal(true);
   };
 
   const handleDisablePinLock = async () => {
-    // Remove PIN from secure storage
     await window.electronAPI.wipePin();
     setPinLockEnabled(false);
     alert('PIN lock disabled');
   };
 
-  // This would be called after PIN is set in the modal
   const handlePinSet = () => {
     setPinLockEnabled(true);
     setShowSetPinModal(false);
@@ -38,22 +31,48 @@ const Privacy: React.FC = () => {
           Add an extra layer of security with a local PIN lock. If you forget your PIN, you will need to re-link this device and your message history will be wiped.
         </p>
         {pinLockEnabled ? (
-          <button onClick={handleDisablePinLock}>Disable PIN Lock</button>
+          <div
+            onClick={handleDisablePinLock}
+            className="button-like-style"
+            role="button"
+            tabIndex={0}
+            onKeyPress={(e) => { if (e.key === 'Enter') handleDisablePinLock(); }}
+          >
+            Disable PIN Lock
+          </div>
         ) : (
-          <button onClick={handleEnablePinLock}>Enable PIN Lock</button>
+          <div
+            onClick={handleEnablePinLock}
+            className="button-like-style"
+            role="button"
+            tabIndex={0}
+            onKeyPress={(e) => { if (e.key === 'Enter') handleEnablePinLock(); }}
+          >
+            Enable PIN Lock
+          </div>
         )}
       </div>
 
-      {/* Show PIN set/change modal if needed */}
       {showSetPinModal && (
-        // Replace with your PIN modal implementation
         <div>
-          {/* <PinPromptModal onUnlock={handlePinSet} /> */}
-          <div>
-            <h3>Set your PIN</h3>
-            {/* Add PIN input fields and confirm logic here */}
-            <button onClick={handlePinSet}>Set PIN (demo)</button>
-            <button onClick={() => setShowSetPinModal(false)}>Cancel</button>
+          <h3>Set your PIN</h3>
+          <div
+            onClick={handlePinSet}
+            className="button-like-style"
+            role="button"
+            tabIndex={0}
+            onKeyPress={(e) => { if (e.key === 'Enter') handlePinSet(); }}
+          >
+            Set PIN (demo)
+          </div>
+          <div
+            onClick={() => setShowSetPinModal(false)}
+            className="button-like-style"
+            role="button"
+            tabIndex={0}
+            onKeyPress={(e) => { if (e.key === 'Enter') setShowSetPinModal(false); }}
+          >
+            Cancel
           </div>
         </div>
       )}
