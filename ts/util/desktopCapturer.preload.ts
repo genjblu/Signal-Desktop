@@ -9,17 +9,16 @@ import { createLogger } from '../logging/log.std.ts';
 import * as Errors from '../types/errors.std.ts';
 import type { PresentableSource } from '../types/Calling.std.ts';
 import type { LocalizerType } from '../types/Util.std.ts';
-import {
-  REQUESTED_SCREEN_SHARE_WIDTH,
-  REQUESTED_SCREEN_SHARE_HEIGHT,
-  REQUESTED_SCREEN_SHARE_FRAMERATE,
-} from '../calling/constants.std.ts';
 import { strictAssert } from './assert.std.ts';
 import { explodePromise } from './explodePromise.std.ts';
 import { isNotNil } from './isNotNil.std.ts';
 import { drop } from './drop.std.ts';
 import { SECOND } from './durations/index.std.ts';
 import { isOlderThan } from './timestamp.std.ts';
+import {
+  getScreenShareSettings,
+  getResolutionDimensions,
+} from '../calling/screenShareSettings.std.ts';
 
 const log = createLogger('desktopCapturer');
 
@@ -193,11 +192,19 @@ export class DesktopCapturer {
   async #getStream(): Promise<void> {
     liveCapturers.add(this);
     try {
+      const settings = getScreenShareSettings();
+      const { width, height } = getResolutionDimensions(settings.resolution);
+      const fps = settings.framerate;
+
       // Only allow one global getDisplayMedia() request at a time
       if (!DesktopCapturer.getDisplayMediaPromise) {
         DesktopCapturer.getDisplayMediaPromise =
           navigator.mediaDevices.getDisplayMedia({
-            video: true,
+            video: {
+              width: { max: width, ideal: width },
+              height: { max: height, ideal: height },
+              frameRate: { max: fps, ideal: fps },
+            },
           });
       }
       const stream = await DesktopCapturer.getDisplayMediaPromise;
@@ -206,20 +213,27 @@ export class DesktopCapturer {
       const videoTrack = stream.getVideoTracks()[0];
       strictAssert(videoTrack, 'videoTrack does not exist');
 
-      // Apply constraints and ensure that there is at least 1 frame per second.
+      // Set contentHint ('motion' for smooth high FPS, 'detail' for static text)
+      try {
+        videoTrack.contentHint = settings.mode;
+      } catch {
+        // Ignore if unsupported
+      }
+
+      // Apply constraints with user selected resolution and framerate
       await videoTrack.applyConstraints({
         width: {
-          max: REQUESTED_SCREEN_SHARE_WIDTH,
-          ideal: REQUESTED_SCREEN_SHARE_WIDTH,
+          max: width,
+          ideal: width,
         },
         height: {
-          max: REQUESTED_SCREEN_SHARE_HEIGHT,
-          ideal: REQUESTED_SCREEN_SHARE_HEIGHT,
+          max: height,
+          ideal: height,
         },
         frameRate: {
-          min: 1,
-          max: REQUESTED_SCREEN_SHARE_FRAMERATE,
-          ideal: REQUESTED_SCREEN_SHARE_FRAMERATE,
+          min: Math.min(15, fps),
+          max: fps,
+          ideal: fps,
         },
       });
 
@@ -246,6 +260,11 @@ export class DesktopCapturer {
   }
 
   #getNativeMacOSStream(): Stream {
+    const settings = getScreenShareSettings();
+    const { width: targetWidth, height: targetHeight } =
+      getResolutionDimensions(settings.resolution);
+    const targetFps = settings.framerate;
+
     const track = new MediaStreamTrackGenerator({ kind: 'video' });
     const writer = track.writable.getWriter();
 
@@ -273,9 +292,9 @@ export class DesktopCapturer {
     // oxlint-disable-next-line global-require, typescript/no-var-requires
     const macScreenShare = require('@indutny/mac-screen-share');
     const stream: Stream = new macScreenShare.Stream({
-      width: REQUESTED_SCREEN_SHARE_WIDTH,
-      height: REQUESTED_SCREEN_SHARE_HEIGHT,
-      frameRate: REQUESTED_SCREEN_SHARE_FRAMERATE,
+      width: targetWidth,
+      height: targetHeight,
+      frameRate: targetFps,
 
       onStart: () => {
         isRunning = true;

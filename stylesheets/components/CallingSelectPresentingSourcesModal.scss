@@ -77,4 +77,61 @@
       margin-inline-end: 8px;
     }
   }
+
+  &__settings {
+    margin-top: 16px;
+    margin-bottom: 8px;
+    padding: 14px 16px;
+    background-color: variables.$color-gray-80;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  &__settings-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: variables.$color-gray-15;
+    min-width: 120px;
+  }
+
+  &__button-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  &__pill {
+    @include mixins.button-reset();
+    & {
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: 14px;
+      background-color: variables.$color-gray-75;
+      color: variables.$color-gray-25;
+      border: 1px solid transparent;
+      transition: all 0.15s ease-in-out;
+      cursor: pointer;
+
+      &:hover {
+        background-color: variables.$color-gray-65;
+        color: variables.$color-white;
+      }
+
+      &--active {
+        background-color: variables.$color-ultramarine;
+        color: variables.$color-white;
+        border-color: variables.$color-ultramarine-light;
+      }
+    }
+  }
 }

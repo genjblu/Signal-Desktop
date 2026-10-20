@@ -62,6 +62,10 @@ import type {
   GumVideoCaptureOptions,
   SizeCallbackType,
 } from '../calling/VideoSupport.preload.ts';
+import {
+  getScreenShareSettings,
+  getResolutionDimensions,
+} from '../calling/screenShareSettings.std.ts';
 import type {
   ActionsType as CallingReduxActionsType,
   GroupCallParticipantInfoType,
@@ -120,9 +124,6 @@ import {
   REQUESTED_VIDEO_FRAMERATE,
   REQUESTED_GROUP_VIDEO_WIDTH,
   REQUESTED_GROUP_VIDEO_HEIGHT,
-  REQUESTED_SCREEN_SHARE_WIDTH,
-  REQUESTED_SCREEN_SHARE_HEIGHT,
-  REQUESTED_SCREEN_SHARE_FRAMERATE,
   SVC_DEFAULT_MODE,
   SVC_DEFAULT_MODE_FOR_SCREENSHARE,
 } from '../calling/constants.std.ts';
@@ -2682,11 +2683,14 @@ class CallingClass {
       throw missingCaseError(call);
     }
 
+    const settings = getScreenShareSettings();
+    const { width, height } = getResolutionDimensions(settings.resolution);
+
     // Start screen sharing stream
     await this.enableCaptureAndSend(call, {
-      maxFramerate: REQUESTED_SCREEN_SHARE_FRAMERATE,
-      maxHeight: REQUESTED_SCREEN_SHARE_HEIGHT,
-      maxWidth: REQUESTED_SCREEN_SHARE_WIDTH,
+      maxFramerate: settings.framerate,
+      maxHeight: height,
+      maxWidth: width,
       mediaStream,
       onEnded: () => {
         this.#reduxInterface?.cancelPresenting();
